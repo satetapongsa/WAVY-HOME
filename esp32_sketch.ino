@@ -1,14 +1,9 @@
 /*
-  Door Security System - ESP32 WiFi (HTTPS Vercel Ready & Serial Edition)
+  WACY Security Access - ESP32 WiFi (HTTPS Vercel Ready & Serial Edition)
   
-  WiFi Configured:
-  - SSID: T5
-  - Password: iloveanmum
-  
-  Support:
-  - HTTPS POST to Vercel deployed backend
-  - HTTP POST fallback
-  - Serial fallback
+  Configuration:
+  - Fill in your WiFi SSID and Password below before flashing to ESP32.
+  - Fill in your Vercel deployment HTTPS URL.
 */
 
 #include <WiFi.h>
@@ -16,26 +11,26 @@
 #include <WiFiClientSecure.h>
 
 // -------------------------------------------------------------------
-// 1. ตั้งค่า WiFi และ Vercel Server URL
+// 1. WiFi & Server Configuration (Replace with your actual credentials)
 // -------------------------------------------------------------------
-const char* WIFI_SSID = "T5";
-const char* WIFI_PASSWORD = "iloveanmum";
+const char* WIFI_SSID = "YOUR_WIFI_SSID";
+const char* WIFI_PASSWORD = "YOUR_WIFI_PASSWORD";
 
-// เปลี่ยนเป็น Domain ของ Vercel ของคุณ (เช่น https://your-app.vercel.app/api/sensor-event)
+// Replace with your Vercel deployment URL
 const char* VERCEL_SERVER_URL = "https://YOUR-APP-NAME.vercel.app/api/sensor-event"; 
 
 // -------------------------------------------------------------------
-// 2. ขาสัญญาณ GPIO ของ ESP32 สำหรับเซนเซอร์ 5 ตัว
+// 2. ESP32 GPIO Pin Configuration (5 Sensors)
 // -------------------------------------------------------------------
 const int SENSOR_PINS[5] = {13, 12, 14, 27, 26};
-const int SENSOR_TRIGGER_STATE = LOW; // LOW สำหรับ IR Obstacle Sensor, HIGH สำหรับ PIR Motion Sensor
+const int SENSOR_TRIGGER_STATE = LOW; // LOW for IR Obstacle sensor, HIGH for PIR Motion sensor
 
 const char* SENSOR_NAMES[5] = {
-  "Outside Door (นอกประตู)",
-  "Outer Frame (ขอบประตูนอก)",
-  "Door Threshold (ธรณีประตู)",
-  "Inner Frame (ขอบประตูใน)",
-  "Inside Room (ในห้อง)"
+  "Sensor 1 (Outside Door)",
+  "Sensor 2 (Outer Frame)",
+  "Sensor 3 (Door Threshold)",
+  "Sensor 4 (Inner Frame)",
+  "Sensor 5 (Inside Room)"
 };
 
 const unsigned long DEBOUNCE_DELAY = 100;
@@ -49,7 +44,6 @@ int triggerSequence[5] = {0, 0, 0, 0, 0};
 int sequenceCount = 0;
 unsigned long firstSequenceTime = 0;
 
-// ฟังก์ชันส่ง HTTPS POST JSON ไปยัง Vercel Server
 void sendHttpsEvent(String jsonPayload) {
   Serial.print("[Serial JSON]: ");
   Serial.println(jsonPayload);
@@ -57,7 +51,6 @@ void sendHttpsEvent(String jsonPayload) {
   if (WiFi.status() == WL_CONNECTED) {
     WiFiClientSecure *client = new WiFiClientSecure;
     if (client) {
-      // ข้ามการตรวจ Certificate SSL เพื่อให้ส่งเข้า Vercel ได้สะดวกรวดเร็ว
       client->setInsecure();
 
       HTTPClient http;
@@ -117,15 +110,13 @@ void evaluateSequence() {
 void setup() {
   Serial.begin(115200);
   delay(1000);
-  Serial.println("\n--- ESP32 Door Security (Vercel Edition) ---");
+  Serial.println("\n--- WACY Security Access ESP32 ---");
 
-  // ตั้งค่าขาเซนเซอร์ 5 ตัว
   for (int i = 0; i < 5; i++) {
     pinMode(SENSOR_PINS[i], INPUT_PULLUP);
     lastPinState[i] = digitalRead(SENSOR_PINS[i]);
   }
 
-  // เชื่อมต่อ WiFi T5
   Serial.printf("Connecting to WiFi SSID: %s\n", WIFI_SSID);
   WiFi.mode(WIFI_STA);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
@@ -138,13 +129,11 @@ void setup() {
   }
 
   if (WiFi.status() == WL_CONNECTED) {
-    Serial.println("\n[WiFi Connected Successfully!]");
+    Serial.println("\n[WiFi Connected Successfully]");
     Serial.print("ESP32 IP Address: ");
     Serial.println(WiFi.localIP());
-    Serial.print("Target Vercel URL: ");
-    Serial.println(VERCEL_SERVER_URL);
   } else {
-    Serial.println("\n[WiFi Connection Failed] Please check WiFi credentials.");
+    Serial.println("\n[WiFi Connection Timeout] Check credentials.");
   }
 }
 
