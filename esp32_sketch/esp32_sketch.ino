@@ -1,17 +1,17 @@
 /*
   WACY Security Access - Dedicated ESP32 Independent 5-Sensor Code
   
-  Fault-Tolerant Independent Sensor Design:
-  Each sensor head (1 to 5) operates 100% independently. 
-  If Sensor Head 5 (or any sensor) is broken/damaged/disconnected, 
-  all remaining working sensors (1, 2, 3, 4) will continue to detect and send events normally.
+  WiFi Credentials:
+  - SSID: T2.4
+  - Password: iloveanmum
+  - Target Endpoint: https://wavy-home.vercel.app/api/sensor-event
 */
 
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include <WiFiClientSecure.h>
 
-const char* WIFI_SSID = "T5";
+const char* WIFI_SSID = "T2.4";
 const char* WIFI_PASSWORD = "iloveanmum";
 const char* VERCEL_SERVER_URL = "https://wavy-home.vercel.app/api/sensor-event";
 
@@ -78,7 +78,7 @@ void setup() {
     lastPinState[i] = digitalRead(SENSOR_PINS[i]);
   }
 
-  Serial.printf("Connecting to WiFi: %s\n", WIFI_SSID);
+  Serial.printf("Connecting to WiFi 2.4GHz: %s\n", WIFI_SSID);
   WiFi.mode(WIFI_STA);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 

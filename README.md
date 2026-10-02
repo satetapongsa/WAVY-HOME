@@ -26,7 +26,7 @@ Power Connections:
 
 ## ESP32 Pre-configured Settings
 
-- WiFi SSID: T5
+- WiFi SSID: T2.4
 - WiFi Password: iloveanmum
 - Target Vercel Endpoint: https://wavy-home.vercel.app/api/sensor-event
 
