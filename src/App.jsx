@@ -3,15 +3,15 @@ import SensorDoorVisualizer from './components/SensorDoorVisualizer';
 import LogsTable from './components/LogsTable';
 import SecurityControls from './components/SecurityControls';
 import PassageStats from './components/PassageStats';
-import { Shield, Bell, Wifi, WifiOff, LayoutDashboard, Radio, History, Sliders, CheckCircle2, ShieldCheck } from 'lucide-react';
+import { ShieldCheck, Bell, Wifi, WifiOff, LayoutDashboard, Radio, History, Sliders, CheckCircle2 } from 'lucide-react';
 
 export default function App() {
   const [sensors, setSensors] = useState([
-    { id: 1, name: 'Sensor 1 (นอกประตู)', active: false },
-    { id: 2, name: 'Sensor 2 (ขอบประตูนอก)', active: false },
-    { id: 3, name: 'Sensor 3 (ธรณีประตู)', active: false },
-    { id: 4, name: 'Sensor 4 (ขอบประตูใน)', active: false },
-    { id: 5, name: 'Sensor 5 (ในห้อง)', active: false }
+    { id: 1, name: 'Sensor Head 1', active: false },
+    { id: 2, name: 'Sensor Head 2', active: false },
+    { id: 3, name: 'Sensor Head 3', active: false },
+    { id: 4, name: 'Sensor Head 4', active: false },
+    { id: 5, name: 'Sensor Head 5', active: false }
   ]);
   const [systemMode, setSystemMode] = useState('AWAY');
   const [doorOpenCount, setDoorOpenCount] = useState(0);
@@ -112,10 +112,9 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 pb-24 md:pb-8">
-      {/* WACY Security Access Top Navigation Bar */}
+      {/* WACY Security Access Header Bar */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md px-4 py-3 shadow-sm border-b border-slate-200">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          {/* WACY Brand Title */}
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center shadow-md shrink-0">
               <ShieldCheck className="w-6 h-6 text-indigo-400" />
@@ -135,7 +134,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* Real-time System Status & Clock */}
           <div className="flex items-center gap-3">
             <div className="hidden sm:flex flex-col items-end mr-2">
               <span className="text-xs font-mono font-bold text-slate-800">{currentTime}</span>
@@ -154,7 +152,7 @@ export default function App() {
         </div>
       </header>
 
-      {/* Main Container */}
+      {/* Main Content */}
       <main className="max-w-7xl mx-auto p-4 md:p-6 space-y-4">
         {/* Banner Alert Toast */}
         {bannerAlert && (
