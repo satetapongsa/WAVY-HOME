@@ -3,7 +3,7 @@ import SensorDoorVisualizer from './components/SensorDoorVisualizer';
 import LogsTable from './components/LogsTable';
 import SecurityControls from './components/SecurityControls';
 import PassageStats from './components/PassageStats';
-import { ShieldCheck, Bell, Wifi, WifiOff, CheckCircle2 } from 'lucide-react';
+import { Waves, Bell, WifiOff, CheckCircle2 } from 'lucide-react';
 
 export default function App() {
   const [sensors, setSensors] = useState([
@@ -29,7 +29,6 @@ export default function App() {
     return () => clearInterval(timer);
   }, []);
 
-  // Poll API for real-time updates (Compatible with Vercel Serverless Functions)
   const fetchStatusAndLogs = async () => {
     try {
       const [resStatus, resLogs] = await Promise.all([
@@ -54,7 +53,6 @@ export default function App() {
     }
   };
 
-  // Connect WebSocket with HTTP Polling Fallback for Vercel
   useEffect(() => {
     fetchStatusAndLogs();
     const pollInterval = setInterval(fetchStatusAndLogs, 1500);
@@ -135,24 +133,24 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 pb-8">
-      {/* Header Bar */}
+      {/* WAVY Home Header Bar */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md px-4 py-3 shadow-sm border-b border-slate-200">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center shadow-md shrink-0">
-              <ShieldCheck className="w-6 h-6 text-indigo-400" />
+            <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-md shrink-0">
+              <Waves className="w-6 h-6" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-base md:text-xl font-extrabold tracking-tight text-slate-900">
-                  WACY Security Access
+                  WAVY Home
                 </h1>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-mono font-bold border border-slate-200">
-                  ESP32 IoT Dashboard
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-mono font-bold border border-indigo-200">
+                  ESP32 Security
                 </span>
               </div>
               <p className="text-[11px] text-slate-500 font-medium">
-                ระบบเฝ้าระวังประตู 5 เซนเซอร์แบบจุดเดียวเบ็ดเสร็จ
+                ระบบเฝ้าระวังและตรวจจับการเปิด-ปิดประตูห้อง
               </p>
             </div>
           </div>
@@ -183,7 +181,7 @@ export default function App() {
             <div className="flex items-center gap-2.5">
               <Bell className="w-5 h-5 text-rose-600 shrink-0" />
               <div>
-                <h4 className="font-bold text-xs md:text-sm text-rose-950">แจ้งเตือนกิจกรรมผ่านประตู</h4>
+                <h4 className="font-bold text-xs md:text-sm text-rose-950">แจ้งเตือนกิจกรรมเปิด-ปิดประตูห้อง</h4>
                 <p className="text-xs text-rose-800">{bannerAlert}</p>
               </div>
             </div>

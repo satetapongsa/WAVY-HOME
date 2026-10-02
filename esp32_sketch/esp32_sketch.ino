@@ -1,5 +1,5 @@
 /*
-  WACY Security Access - Dedicated ESP32 Edge Trigger 5-Sensor Code
+  WAVY Home - Dedicated ESP32 Edge Trigger 5-Sensor Code
   
   Logic:
   Each sensor head (1 to 5) works 100% independently.
@@ -72,7 +72,7 @@ void sendDoorAccessEvent(int headId, const char* headName) {
 void setup() {
   Serial.begin(115200);
   delay(1000);
-  Serial.println("\n--- WACY Security Access ESP32 ---");
+  Serial.println("\n--- WAVY Home ESP32 ---");
 
   for (int i = 0; i < 5; i++) {
     pinMode(SENSOR_PINS[i], INPUT_PULLUP);

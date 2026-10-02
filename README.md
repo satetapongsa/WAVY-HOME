@@ -1,6 +1,6 @@
-# WACY Security Access
+# WAVY Home
 
-WACY Security Access is an enterprise-grade 5-head sensor door security monitoring system built for ESP32 and Arduino boards, integrated with an Express Node.js backend and a React Web Application Dashboard deployed on Vercel.
+WAVY Home is a 5-head sensor door security monitoring system built for ESP32 and Arduino boards, integrated with an Express Node.js backend and a React Web Application Dashboard deployed on Vercel.
 
 Production Web Dashboard URL: https://wavy-home.vercel.app/
 
@@ -35,7 +35,7 @@ Power Connections:
 ## System Architecture
 
 ```text
-[5-Head Sensor OUT 1..5] ---> [ESP32 Board] ---> [HTTPS POST] ---> [https://wavy-home.vercel.app/api/sensor-event] ---> [WACY React Dashboard]
+[5-Head Sensor OUT 1..5] ---> [ESP32 Board] ---> [HTTPS POST] ---> [https://wavy-home.vercel.app/api/sensor-event] ---> [WAVY Home React Dashboard]
 ```
 
 ---

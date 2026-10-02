@@ -1,5 +1,5 @@
 /*
-  WACY Security Access - Robust Independent 5-Sensor Edge Trigger System
+  WAVY Home - Robust Independent 5-Sensor Edge Trigger System
   
   Logic:
   Each sensor head (1 to 5) works 100% independently.
@@ -76,7 +76,7 @@ void sendEvent(String jsonPayload) {
 
 void sendDoorAccessEvent(int headId, const char* headName) {
   String json = "{";
-  json += "\"type\":\"sensor_state\",";
+  json += "\"type\":\"door_access\",";
   json += "\"sensor_id\":" + String(headId) + ",";
   json += "\"sensor_name\":\"" + String(headName) + "\",";
   json += "\"state\":1";
@@ -88,7 +88,7 @@ void sendDoorAccessEvent(int headId, const char* headName) {
 void setup() {
   Serial.begin(115200);
   delay(1000);
-  Serial.println("\n--- WACY Security Access (Edge Trigger 5-Sensor) ---");
+  Serial.println("\n--- WAVY Home (Edge Trigger 5-Sensor) ---");
 
   for (int i = 0; i < 5; i++) {
     pinMode(SENSOR_PINS[i], INPUT_PULLUP);
