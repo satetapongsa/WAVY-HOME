@@ -1,29 +1,21 @@
 /*
-  WACY Security Access - ESP32 WiFi (HTTPS Vercel Ready & Serial Edition)
+  WACY Security Access - Dedicated ESP32 Sketch
   
-  Configuration:
-  - Fill in your WiFi SSID and Password below before flashing to ESP32.
-  - Fill in your Vercel deployment HTTPS URL.
+  WiFi & HTTPS Vercel Client Edition
 */
 
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include <WiFiClientSecure.h>
 
-// -------------------------------------------------------------------
-// 1. WiFi & Server Configuration (Replace with your actual credentials)
-// -------------------------------------------------------------------
+// WiFi Configuration
 const char* WIFI_SSID = "YOUR_WIFI_SSID";
 const char* WIFI_PASSWORD = "YOUR_WIFI_PASSWORD";
+const char* VERCEL_SERVER_URL = "https://YOUR-APP-NAME.vercel.app/api/sensor-event";
 
-// Replace with your Vercel deployment URL
-const char* VERCEL_SERVER_URL = "https://YOUR-APP-NAME.vercel.app/api/sensor-event"; 
-
-// -------------------------------------------------------------------
-// 2. ESP32 GPIO Pin Configuration (5 Sensors)
-// -------------------------------------------------------------------
+// ESP32 GPIO Pins
 const int SENSOR_PINS[5] = {13, 12, 14, 27, 26};
-const int SENSOR_TRIGGER_STATE = LOW; // LOW for IR Obstacle sensor, HIGH for PIR Motion sensor
+const int SENSOR_TRIGGER_STATE = LOW;
 
 const char* SENSOR_NAMES[5] = {
   "Sensor 1 (Outside Door)",
@@ -52,25 +44,19 @@ void sendHttpsEvent(String jsonPayload) {
     WiFiClientSecure *client = new WiFiClientSecure;
     if (client) {
       client->setInsecure();
-
       HTTPClient http;
       if (http.begin(*client, VERCEL_SERVER_URL)) {
         http.addHeader("Content-Type", "application/json");
-
         int httpResponseCode = http.POST(jsonPayload);
         if (httpResponseCode > 0) {
-          Serial.printf("[HTTPS Vercel] Success Code: %d\n", httpResponseCode);
+          Serial.printf("[HTTPS Vercel] Code: %d\n", httpResponseCode);
         } else {
-          Serial.printf("[HTTPS Vercel] Error: %s (Code: %d)\n", http.errorToString(httpResponseCode).c_str(), httpResponseCode);
+          Serial.printf("[HTTPS Vercel] Error: %s\n", http.errorToString(httpResponseCode).c_str());
         }
         http.end();
-      } else {
-        Serial.println("[HTTPS Vercel] Unable to connect to server URL");
       }
       delete client;
     }
-  } else {
-    Serial.println("[WiFi] Not connected. Event skipped.");
   }
 }
 
@@ -122,18 +108,18 @@ void setup() {
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
   int attempts = 0;
-  while (WiFi.status() != WL_CONNECTED && attempts < 30) {
+  while (WiFi.status() != WL_CONNECTED && attempts < 25) {
     delay(500);
     Serial.print(".");
     attempts++;
   }
 
   if (WiFi.status() == WL_CONNECTED) {
-    Serial.println("\n[WiFi Connected Successfully]");
-    Serial.print("ESP32 IP Address: ");
+    Serial.println("\n[WiFi Connected]");
+    Serial.print("ESP32 IP: ");
     Serial.println(WiFi.localIP());
   } else {
-    Serial.println("\n[WiFi Connection Timeout] Check credentials.");
+    Serial.println("\n[WiFi Timeout] Running Serial mode.");
   }
 }
 
