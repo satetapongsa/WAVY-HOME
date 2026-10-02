@@ -1,8 +1,10 @@
 /*
-  WACY Security Access - Simple 5-Sensor Door Open/Close Detector
+  WACY Security Access - Independent 5-Sensor Door Open/Close Detector
   
-  Logic:
-  When ANY sensor detects motion or object passing, it triggers 1 Room Access / Door Open-Close Event with timestamp.
+  Fault-Tolerant Independent Sensor Design:
+  Each sensor head (1 to 5) operates 100% independently. 
+  If Sensor Head 5 (or any sensor) is broken/damaged/disconnected, 
+  all remaining working sensors (1, 2, 3, 4) will continue to detect and send events normally.
   
   WiFi Configured:
   - SSID: T5
@@ -20,14 +22,14 @@
   const char* WIFI_PASSWORD = "iloveanmum";
   const char* VERCEL_SERVER_URL = "https://wavy-home.vercel.app/api/sensor-event";
 
-  // ESP32 GPIO Pins for 5 Sensor Heads
+  // ESP32 GPIO Pins for 5 Sensor Heads (Head 1 to 5)
   const int SENSOR_PINS[5] = {13, 12, 14, 27, 26};
 #else
   // Arduino UNO Digital Pins
   const int SENSOR_PINS[5] = {2, 3, 4, 5, 6};
 #endif
 
-// Active state: LOW for Active-Low IR Sensors (Change to HIGH if sensor outputs HIGH when triggered)
+// Active state: LOW for Active-Low IR Sensors (Change to HIGH if sensors output HIGH when triggered)
 const int SENSOR_TRIGGER_STATE = LOW;
 
 const char* SENSOR_NAMES[5] = {
@@ -39,6 +41,8 @@ const char* SENSOR_NAMES[5] = {
 };
 
 const unsigned long DEBOUNCE_DELAY = 100;
+
+// Independent State Trackers per sensor head
 int lastPinState[5] = {HIGH, HIGH, HIGH, HIGH, HIGH};
 int currentSensorState[5] = {0, 0, 0, 0, 0};
 unsigned long lastDebounceTime[5] = {0, 0, 0, 0, 0};
@@ -84,7 +88,7 @@ void sendDoorAccessEvent(int headId, const char* headName) {
 void setup() {
   Serial.begin(115200);
   delay(1000);
-  Serial.println("\n--- WACY Security Access (Door Detector) ---");
+  Serial.println("\n--- WACY Security Access (Independent 5-Sensor) ---");
 
   for (int i = 0; i < 5; i++) {
     pinMode(SENSOR_PINS[i], INPUT_PULLUP);
@@ -116,6 +120,7 @@ void setup() {
 void loop() {
   unsigned long now = millis();
 
+  // Read each sensor 100% independently
   for (int i = 0; i < 5; i++) {
     int rawRead = digitalRead(SENSOR_PINS[i]);
 
@@ -130,7 +135,7 @@ void loop() {
         currentSensorState[i] = isTriggered;
 
         if (isTriggered == 1) {
-          // Trigger 1 Door Open/Close Event instantly
+          // Trigger 1 Door Access Event independently
           sendDoorAccessEvent(i + 1, SENSOR_NAMES[i]);
         }
       }

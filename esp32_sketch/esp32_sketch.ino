@@ -1,8 +1,10 @@
 /*
-  WACY Security Access - Dedicated ESP32 Simple 5-Sensor Code
+  WACY Security Access - Dedicated ESP32 Independent 5-Sensor Code
   
-  Logic:
-  When ANY sensor detects motion or object passing, it triggers 1 Room Access / Door Open-Close Event with timestamp.
+  Fault-Tolerant Independent Sensor Design:
+  Each sensor head (1 to 5) operates 100% independently. 
+  If Sensor Head 5 (or any sensor) is broken/damaged/disconnected, 
+  all remaining working sensors (1, 2, 3, 4) will continue to detect and send events normally.
 */
 
 #include <WiFi.h>
