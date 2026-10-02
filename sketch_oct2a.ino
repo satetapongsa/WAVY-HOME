@@ -1,21 +1,3 @@
-/*
-  WACY Security Access - ESP32 & Arduino 5-Head Integrated Sensor Code
-  
-  Target Deployment: https://wavy-home.vercel.app/
-  Target Endpoint:   https://wavy-home.vercel.app/api/sensor-event
-  
-  WiFi Configured:
-  - SSID: T5
-  - Password: iloveanmum
-  
-  Hardware Pinouts (Sensor 5-Head Module OUT 1..5):
-  - OUT 1 -> ESP32 GPIO 13 (Arduino UNO Pin D2)
-  - OUT 2 -> ESP32 GPIO 12 (Arduino UNO Pin D3)
-  - OUT 3 -> ESP32 GPIO 14 (Arduino UNO Pin D4)
-  - OUT 4 -> ESP32 GPIO 27 (Arduino UNO Pin D5)
-  - OUT 5 -> ESP32 GPIO 26 (Arduino UNO Pin D6)
-*/
-
 #ifdef ESP32
   #include <WiFi.h>
   #include <HTTPClient.h>

@@ -30,58 +30,89 @@ export default function App() {
     return () => clearInterval(timer);
   }, []);
 
-  useEffect(() => {
-    const connectWS = () => {
-      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsHost = window.location.hostname || 'localhost';
-      const wsUrl = `${wsProtocol}//${wsHost}:5000`;
+  // Poll API for real-time updates (Compatible with Vercel Serverless Functions)
+  const fetchStatusAndLogs = async () => {
+    try {
+      const [resStatus, resLogs] = await Promise.all([
+        fetch('/api/status'),
+        fetch('/api/logs')
+      ]);
 
-      const ws = new WebSocket(wsUrl);
-      wsRef.current = ws;
-
-      ws.onopen = () => {
+      if (resStatus.ok) {
+        const dataStatus = await resStatus.json();
         setIsConnected(true);
-      };
+        if (dataStatus.mode) setSystemMode(dataStatus.mode);
+        if (typeof dataStatus.doorOpenCount === 'number') setDoorOpenCount(dataStatus.doorOpenCount);
+        if (dataStatus.sensors) setSensors(dataStatus.sensors);
+      }
 
-      ws.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          
-          if (data.type === 'INIT_STATE') {
-            setSystemMode(data.mode);
-            if (typeof data.doorOpenCount === 'number') setDoorOpenCount(data.doorOpenCount);
-            if (data.sensors) setSensors(data.sensors);
-            if (data.logs) setLogs(data.logs);
-          } else if (data.type === 'SENSOR_UPDATE') {
-            setSensors(data.sensors);
-            if (typeof data.doorOpenCount === 'number') setDoorOpenCount(data.doorOpenCount);
-          } else if (data.type === 'NEW_LOG') {
-            setLogs(prev => [data.log, ...prev.slice(0, 199)]);
-            if (data.log.level === 'danger' || (data.log.level === 'warning' && systemMode === 'AWAY')) {
-              setBannerAlert(data.log.details);
-              setTimeout(() => setBannerAlert(null), 5000);
+      if (resLogs.ok) {
+        const dataLogs = await resLogs.json();
+        setLogs(dataLogs);
+      }
+    } catch (e) {
+      console.warn('Polling error:', e);
+    }
+  };
+
+  // Connect WebSocket with HTTP Polling Fallback for Vercel
+  useEffect(() => {
+    // Initial fetch
+    fetchStatusAndLogs();
+
+    // Set up polling interval every 1.5s for live Vercel updates
+    const pollInterval = setInterval(fetchStatusAndLogs, 1500);
+
+    const connectWS = () => {
+      try {
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsHost = window.location.hostname || 'localhost';
+        const wsUrl = `${wsProtocol}//${wsHost}:5000`;
+
+        const ws = new WebSocket(wsUrl);
+        wsRef.current = ws;
+
+        ws.onopen = () => {
+          setIsConnected(true);
+        };
+
+        ws.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            if (data.type === 'INIT_STATE') {
+              setSystemMode(data.mode);
+              if (typeof data.doorOpenCount === 'number') setDoorOpenCount(data.doorOpenCount);
+              if (data.sensors) setSensors(data.sensors);
+              if (data.logs) setLogs(data.logs);
+            } else if (data.type === 'SENSOR_UPDATE') {
+              setSensors(data.sensors);
+              if (typeof data.doorOpenCount === 'number') setDoorOpenCount(data.doorOpenCount);
+            } else if (data.type === 'NEW_LOG') {
+              setLogs(prev => [data.log, ...prev.slice(0, 199)]);
+              if (data.log.level === 'danger' || (data.log.level === 'warning' && systemMode === 'AWAY')) {
+                setBannerAlert(data.log.details);
+                setTimeout(() => setBannerAlert(null), 5000);
+              }
+            } else if (data.type === 'MODE_CHANGE') {
+              setSystemMode(data.mode);
             }
-          } else if (data.type === 'MODE_CHANGE') {
-            setSystemMode(data.mode);
+          } catch (e) {
+            console.error('WS Parse Error', e);
           }
-        } catch (e) {
-          console.error('WS Parse Error', e);
-        }
-      };
+        };
 
-      ws.onclose = () => {
-        setIsConnected(false);
-        setTimeout(connectWS, 3000);
-      };
-
-      ws.onerror = () => {
-        ws.close();
-      };
+        ws.onerror = () => {
+          // Silent fallback to HTTP polling
+        };
+      } catch (e) {
+        // Silent fallback to HTTP polling
+      }
     };
 
     connectWS();
 
     return () => {
+      clearInterval(pollInterval);
       if (wsRef.current) wsRef.current.close();
     };
   }, [systemMode]);
@@ -94,6 +125,7 @@ export default function App() {
         body: JSON.stringify({ mode })
       });
       setSystemMode(mode);
+      fetchStatusAndLogs();
     } catch (e) {
       console.error(e);
     }
@@ -105,6 +137,7 @@ export default function App() {
       const data = await res.json();
       setLogs([]);
       setDoorOpenCount(data.doorOpenCount || 0);
+      fetchStatusAndLogs();
     } catch (e) {
       console.error(e);
     }
@@ -112,7 +145,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 pb-24 md:pb-8">
-      {/* WAVY Security Access Top Navigation Bar */}
+      {/* WAVY Security Access Header Bar */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md px-4 py-3 shadow-sm border-b border-slate-200">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           {/* WAVY Brand Title */}
