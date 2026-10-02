@@ -1,7 +1,8 @@
 /*
-  WACY Security Access - Dedicated ESP32 Sketch
+  WACY Security Access - Dedicated ESP32 5-Head Integrated Sensor Code
   
-  WiFi & HTTPS Vercel Client Edition
+  Hardware: 5-Head Sensor Module (เซนเซอร์ 5 หัวในชุดเดียว)
+  Logic: Any single sensor head trigger counts as 1 Door Open / Passage Event with timestamp.
 */
 
 #include <WiFi.h>
@@ -13,28 +14,23 @@ const char* WIFI_SSID = "YOUR_WIFI_SSID";
 const char* WIFI_PASSWORD = "YOUR_WIFI_PASSWORD";
 const char* VERCEL_SERVER_URL = "https://YOUR-APP-NAME.vercel.app/api/sensor-event";
 
-// ESP32 GPIO Pins
+// ESP32 GPIO Pins for 5 Sensor Heads (Head 1 to 5)
 const int SENSOR_PINS[5] = {13, 12, 14, 27, 26};
 const int SENSOR_TRIGGER_STATE = LOW;
 
 const char* SENSOR_NAMES[5] = {
-  "Sensor 1 (Outside Door)",
-  "Sensor 2 (Outer Frame)",
-  "Sensor 3 (Door Threshold)",
-  "Sensor 4 (Inner Frame)",
-  "Sensor 5 (Inside Room)"
+  "Sensor Head 1",
+  "Sensor Head 2",
+  "Sensor Head 3",
+  "Sensor Head 4",
+  "Sensor Head 5"
 };
 
 const unsigned long DEBOUNCE_DELAY = 100;
-const unsigned long PASSAGE_TIMEOUT = 3000;
 
 int lastPinState[5] = {HIGH, HIGH, HIGH, HIGH, HIGH};
 int currentSensorState[5] = {0, 0, 0, 0, 0};
 unsigned long lastDebounceTime[5] = {0, 0, 0, 0, 0};
-
-int triggerSequence[5] = {0, 0, 0, 0, 0};
-int sequenceCount = 0;
-unsigned long firstSequenceTime = 0;
 
 void sendHttpsEvent(String jsonPayload) {
   Serial.print("[Serial JSON]: ");
@@ -60,43 +56,21 @@ void sendHttpsEvent(String jsonPayload) {
   }
 }
 
-void sendSensorUpdate(int sensorId, const char* sensorName, int state) {
+void sendDoorOpenEvent(int headId, const char* headName) {
   String json = "{";
   json += "\"type\":\"sensor_state\",";
-  json += "\"sensor_id\":" + String(sensorId) + ",";
-  json += "\"sensor_name\":\"" + String(sensorName) + "\",";
-  json += "\"state\":" + String(state);
+  json += "\"sensor_id\":" + String(headId) + ",";
+  json += "\"sensor_name\":\"" + String(headName) + "\",";
+  json += "\"state\":1";
   json += "}";
 
   sendHttpsEvent(json);
-}
-
-void sendPassageEvent(const char* direction) {
-  String json = "{";
-  json += "\"type\":\"passage_detected\",";
-  json += "\"direction\":\"" + String(direction) + "\"";
-  json += "}";
-
-  sendHttpsEvent(json);
-}
-
-void evaluateSequence() {
-  if (sequenceCount < 2) return;
-
-  int first = triggerSequence[0];
-  int last = triggerSequence[sequenceCount - 1];
-
-  if ((first == 1 || first == 2) && (last == 4 || last == 5)) {
-    sendPassageEvent("ENTRY");
-  } else if ((first == 4 || first == 5) && (last == 1 || last == 2)) {
-    sendPassageEvent("EXIT");
-  }
 }
 
 void setup() {
   Serial.begin(115200);
   delay(1000);
-  Serial.println("\n--- WACY Security Access ESP32 ---");
+  Serial.println("\n--- WACY Security Access ESP32 5-Head ---");
 
   for (int i = 0; i < 5; i++) {
     pinMode(SENSOR_PINS[i], INPUT_PULLUP);
@@ -126,11 +100,6 @@ void setup() {
 void loop() {
   unsigned long now = millis();
 
-  if (sequenceCount > 0 && (now - firstSequenceTime > PASSAGE_TIMEOUT)) {
-    evaluateSequence();
-    sequenceCount = 0;
-  }
-
   for (int i = 0; i < 5; i++) {
     int rawRead = digitalRead(SENSOR_PINS[i]);
 
@@ -144,18 +113,8 @@ void loop() {
       if (isTriggered != currentSensorState[i]) {
         currentSensorState[i] = isTriggered;
 
-        sendSensorUpdate(i + 1, SENSOR_NAMES[i], isTriggered);
-
         if (isTriggered == 1) {
-          if (sequenceCount == 0) {
-            firstSequenceTime = now;
-          }
-          if (sequenceCount < 5) {
-            if (sequenceCount == 0 || triggerSequence[sequenceCount - 1] != (i + 1)) {
-              triggerSequence[sequenceCount] = i + 1;
-              sequenceCount++;
-            }
-          }
+          sendDoorOpenEvent(i + 1, SENSOR_NAMES[i]);
         }
       }
     }
