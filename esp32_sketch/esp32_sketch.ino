@@ -1,40 +1,27 @@
 /*
-  WACY Security Access - Dedicated ESP32 5-Head Sensor Code
+  WACY Security Access - Dedicated ESP32 Simple 5-Sensor Code
   
-  Target Deployment: https://wavy-home.vercel.app/
-  Target Endpoint:   https://wavy-home.vercel.app/api/sensor-event
-  
-  WiFi Credentials:
-  - SSID: T5
-  - Password: iloveanmum
-  
-  Hardware Pinouts (Sensor 5-Head Module OUT 1..5):
-  - OUT 1 -> ESP32 GPIO 13
-  - OUT 2 -> ESP32 GPIO 12
-  - OUT 3 -> ESP32 GPIO 14
-  - OUT 4 -> ESP32 GPIO 27
-  - OUT 5 -> ESP32 GPIO 26
+  Logic:
+  When ANY sensor detects motion or object passing, it triggers 1 Room Access / Door Open-Close Event with timestamp.
 */
 
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include <WiFiClientSecure.h>
 
-// WiFi & Server Configuration
 const char* WIFI_SSID = "T5";
 const char* WIFI_PASSWORD = "iloveanmum";
 const char* VERCEL_SERVER_URL = "https://wavy-home.vercel.app/api/sensor-event";
 
-// ESP32 GPIO Pins for Sensor Heads OUT 1..5
 const int SENSOR_PINS[5] = {13, 12, 14, 27, 26};
 const int SENSOR_TRIGGER_STATE = LOW;
 
 const char* SENSOR_NAMES[5] = {
-  "Sensor Head OUT 1",
-  "Sensor Head OUT 2",
-  "Sensor Head OUT 3",
-  "Sensor Head OUT 4",
-  "Sensor Head OUT 5"
+  "Sensor Head 1",
+  "Sensor Head 2",
+  "Sensor Head 3",
+  "Sensor Head 4",
+  "Sensor Head 5"
 };
 
 const unsigned long DEBOUNCE_DELAY = 100;
@@ -64,13 +51,13 @@ void sendHttpsEvent(String jsonPayload) {
       delete client;
     }
   } else {
-    Serial.println("[WiFi] Not connected. Event sent over Serial only.");
+    Serial.println("[WiFi] Not connected. Sent via Serial only.");
   }
 }
 
-void sendDoorOpenEvent(int headId, const char* headName) {
+void sendDoorAccessEvent(int headId, const char* headName) {
   String json = "{";
-  json += "\"type\":\"sensor_state\",";
+  json += "\"type\":\"door_access\",";
   json += "\"sensor_id\":" + String(headId) + ",";
   json += "\"sensor_name\":\"" + String(headName) + "\",";
   json += "\"state\":1";
@@ -82,7 +69,7 @@ void sendDoorOpenEvent(int headId, const char* headName) {
 void setup() {
   Serial.begin(115200);
   delay(1000);
-  Serial.println("\n--- WACY Security Access ESP32 (wavy-home.vercel.app) ---");
+  Serial.println("\n--- WACY Security Access ESP32 ---");
 
   for (int i = 0; i < 5; i++) {
     pinMode(SENSOR_PINS[i], INPUT_PULLUP);
@@ -104,10 +91,8 @@ void setup() {
     Serial.println("\n[WiFi Connected Successfully!]");
     Serial.print("ESP32 Local IP: ");
     Serial.println(WiFi.localIP());
-    Serial.print("Target Server: ");
-    Serial.println(VERCEL_SERVER_URL);
   } else {
-    Serial.println("\n[WiFi Connection Timeout] Please check router status.");
+    Serial.println("\n[WiFi Connection Timeout]");
   }
 }
 
@@ -128,7 +113,7 @@ void loop() {
         currentSensorState[i] = isTriggered;
 
         if (isTriggered == 1) {
-          sendDoorOpenEvent(i + 1, SENSOR_NAMES[i]);
+          sendDoorAccessEvent(i + 1, SENSOR_NAMES[i]);
         }
       }
     }
