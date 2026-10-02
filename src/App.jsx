@@ -3,15 +3,15 @@ import SensorDoorVisualizer from './components/SensorDoorVisualizer';
 import LogsTable from './components/LogsTable';
 import SecurityControls from './components/SecurityControls';
 import PassageStats from './components/PassageStats';
-import { ShieldCheck, Bell, Wifi, WifiOff, LayoutDashboard, Radio, History, Sliders, CheckCircle2 } from 'lucide-react';
+import { Waves, Bell, Wifi, WifiOff, LayoutDashboard, Radio, History, Sliders, CheckCircle2 } from 'lucide-react';
 
 export default function App() {
   const [sensors, setSensors] = useState([
-    { id: 1, name: 'Sensor Head 1', active: false },
-    { id: 2, name: 'Sensor Head 2', active: false },
-    { id: 3, name: 'Sensor Head 3', active: false },
-    { id: 4, name: 'Sensor Head 4', active: false },
-    { id: 5, name: 'Sensor Head 5', active: false }
+    { id: 1, name: 'Sensor Head OUT 1', active: false },
+    { id: 2, name: 'Sensor Head OUT 2', active: false },
+    { id: 3, name: 'Sensor Head OUT 3', active: false },
+    { id: 4, name: 'Sensor Head OUT 4', active: false },
+    { id: 5, name: 'Sensor Head OUT 5', active: false }
   ]);
   const [systemMode, setSystemMode] = useState('AWAY');
   const [doorOpenCount, setDoorOpenCount] = useState(0);
@@ -112,19 +112,20 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 pb-24 md:pb-8">
-      {/* WACY Security Access Header Bar */}
+      {/* WAVY Security Access Top Navigation Bar */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md px-4 py-3 shadow-sm border-b border-slate-200">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
+          {/* WAVY Brand Title */}
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center shadow-md shrink-0">
-              <ShieldCheck className="w-6 h-6 text-indigo-400" />
+            <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-md shrink-0">
+              <Waves className="w-6 h-6" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-base md:text-xl font-extrabold tracking-tight text-slate-900">
-                  WACY Security Access
+                  WAVY Security Access
                 </h1>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-mono font-bold border border-slate-200">
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-mono font-bold border border-indigo-200">
                   ESP32 IoT v2.4
                 </span>
               </div>
@@ -134,6 +135,7 @@ export default function App() {
             </div>
           </div>
 
+          {/* Real-time System Status & Clock */}
           <div className="flex items-center gap-3">
             <div className="hidden sm:flex flex-col items-end mr-2">
               <span className="text-xs font-mono font-bold text-slate-800">{currentTime}</span>
@@ -152,7 +154,7 @@ export default function App() {
         </div>
       </header>
 
-      {/* Main Content */}
+      {/* Main Container */}
       <main className="max-w-7xl mx-auto p-4 md:p-6 space-y-4">
         {/* Banner Alert Toast */}
         {bannerAlert && (
