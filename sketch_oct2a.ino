@@ -1,11 +1,9 @@
 /*
-  WAVY Home - Robust Independent 5-Sensor Edge Trigger System
+  WACY Home - 3+ Simultaneous Sensor Threshold Trigger System
   
   Logic:
-  Each sensor head (1 to 5) works 100% independently.
-  As soon as ANY SINGLE sensor head (S1, S2, S3, S4, or S5) is triggered:
-  - It sends 1 Door Open / Room Access event instantly to Vercel/Serial.
-  - Has a 1.5-second cooldown per sensor head to prevent double-counting on a single pass.
+  Counts as 1 Door Open / Room Access event ONLY when 3 or more sensor heads (>= 3)
+  detect motion/object passing at the exact same time simultaneously!
   
   WiFi Configured:
   - SSID: T2.4
@@ -30,22 +28,15 @@
   const int SENSOR_PINS[5] = {2, 3, 4, 5, 6};
 #endif
 
-// Active state: LOW for Active-Low IR Sensors (If sensors output 3.3V when triggered, change to HIGH)
+// Active state: LOW for Active-Low IR Sensors (Change to HIGH if sensors output HIGH when triggered)
 const int SENSOR_TRIGGER_STATE = LOW;
 
-const char* SENSOR_NAMES[5] = {
-  "Sensor Head OUT 1",
-  "Sensor Head OUT 2",
-  "Sensor Head OUT 3",
-  "Sensor Head OUT 4",
-  "Sensor Head OUT 5"
-};
+const int REQUIRED_SENSORS_THRESHOLD = 3; // Must be >= 3 sensors active simultaneously
+const unsigned long TRIGGER_COOLDOWN_MS = 2500; // 2.5 seconds cooldown
 
-const unsigned long TRIGGER_COOLDOWN_MS = 1500; // 1.5 seconds cooldown per sensor head
-
-// Independent state trackers per sensor head
 bool currentSensorState[5] = {false, false, false, false, false};
-unsigned long lastTriggerTime[5] = {0, 0, 0, 0, 0};
+unsigned long lastGroupTriggerTime = 0;
+bool groupActive = false;
 
 void sendEvent(String jsonPayload) {
   Serial.println(jsonPayload);
@@ -74,11 +65,10 @@ void sendEvent(String jsonPayload) {
 #endif
 }
 
-void sendDoorAccessEvent(int headId, const char* headName) {
+void sendMultiSensorAccessEvent(int activeCount) {
   String json = "{";
   json += "\"type\":\"door_access\",";
-  json += "\"sensor_id\":" + String(headId) + ",";
-  json += "\"sensor_name\":\"" + String(headName) + "\",";
+  json += "\"active_count\":" + String(activeCount) + ",";
   json += "\"state\":1";
   json += "}";
 
@@ -88,12 +78,11 @@ void sendDoorAccessEvent(int headId, const char* headName) {
 void setup() {
   Serial.begin(115200);
   delay(1000);
-  Serial.println("\n--- WAVY Home (Edge Trigger 5-Sensor) ---");
+  Serial.println("\n--- WAVY Home (3+ Sensor Threshold Trigger) ---");
 
   for (int i = 0; i < 5; i++) {
     pinMode(SENSOR_PINS[i], INPUT_PULLUP);
     currentSensorState[i] = false;
-    lastTriggerTime[i] = 0;
   }
 
 #ifdef ESP32
@@ -120,25 +109,31 @@ void setup() {
 
 void loop() {
   unsigned long now = millis();
+  int activeCount = 0;
 
-  // Read each of the 5 sensor heads 100% independently with Edge Trigger
+  // Count how many sensor heads are active SIMULTANEOUSLY right now
   for (int i = 0; i < 5; i++) {
     int rawRead = digitalRead(SENSOR_PINS[i]);
-    bool isTriggered = (rawRead == SENSOR_TRIGGER_STATE);
-
-    if (isTriggered) {
-      // If sensor was not triggered before AND cooldown window has passed
-      if (!currentSensorState[i] && (now - lastTriggerTime[i] > TRIGGER_COOLDOWN_MS)) {
-        currentSensorState[i] = true;
-        lastTriggerTime[i] = now;
-
-        // Send instant 1 Door Open / Access Event
-        sendDoorAccessEvent(i + 1, SENSOR_NAMES[i]);
-      }
+    if (rawRead == SENSOR_TRIGGER_STATE) {
+      activeCount++;
+      currentSensorState[i] = true;
     } else {
-      // Reset state when object moves away / pin returns to idle
       currentSensorState[i] = false;
     }
+  }
+
+  // Count as 1 Door Open/Close event ONLY when 3 or more sensors detect motion at the exact same time
+  if (activeCount >= REQUIRED_SENSORS_THRESHOLD) {
+    if (!groupActive && (now - lastGroupTriggerTime > TRIGGER_COOLDOWN_MS)) {
+      groupActive = true;
+      lastGroupTriggerTime = now;
+
+      // Trigger 1 Door Open Event
+      sendMultiSensorAccessEvent(activeCount);
+    }
+  } else if (activeCount == 0) {
+    // Reset trigger when object moves away completely
+    groupActive = false;
   }
 
   delay(10);

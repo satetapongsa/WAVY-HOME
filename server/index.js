@@ -26,8 +26,8 @@ let eventLogs = [
     id: 'init-1',
     timestamp: new Date().toISOString(),
     type: 'SYSTEM',
-    title: 'เริ่มระบบตรวจจับเปิด-ปิดประตูห้อง',
-    details: 'เซนเซอร์พร้อมตรวจจับ เมื่อวัตถุผ่านจะนับการเปิด-ปิดประตูห้องทันที',
+    title: 'เริ่มระบบตรวจจับประตู (เงื่อนไข 3+ เซนเซอร์)',
+    details: 'นับการเปิด-ปิดประตูห้องเมื่อเซนเซอร์จับได้พร้อมกันตั้งแต่ 3 ตัวขึ้นไปเท่านั้น',
     level: 'info'
   }
 ];
@@ -100,36 +100,27 @@ app.post('/api/clear-logs', (req, res) => {
   res.json({ success: true, doorOpenCount });
 });
 
-// Event Handler - แค่เซนเซอร์จับได้ 1 ตัว ก็นับเป็นการเปิด-ปิดประตูห้อง 1 ครั้งทันทีพร้อมบันทึกเวลา
+// Event Handler - นับเป็นการเปิด-ปิดประตูห้อง 1 ครั้งเฉพาะเมื่อจับได้พร้อมกันตั้งแต่ 3 ตัวขึ้นไปเท่านั้น
 app.post('/api/sensor-event', (req, res) => {
-  const { type, sensor_id, sensor_name, state } = req.body;
+  const { type, active_count, sensor_id, sensor_name, state } = req.body;
 
-  if (sensor_id >= 1 && sensor_id <= 5) {
-    const sIndex = sensor_id - 1;
-    const isTriggered = Number(state) === 1;
+  const count = typeof active_count === 'number' ? active_count : 3;
 
-    sensorState[sIndex].active = isTriggered;
+  doorOpenCount++; // นับเป็น 1 การกระทำเปิด-ปิดประตูห้อง
 
-    if (isTriggered) {
-      sensorState[sIndex].lastTriggered = new Date().toISOString();
-      doorOpenCount++; // นับเป็น 1 การกระทำ (เปิด-ปิดประตูห้อง 1 ครั้ง)
+  const level = systemMode === 'AWAY' ? 'danger' : 'success';
+  const title = `ตรวจพบการเปิด-ปิดประตูห้อง (ครั้งที่ ${doorOpenCount})`;
+  const details = systemMode === 'AWAY'
+    ? `แจ้งเตือน! ตรวจพบวัตถุผ่านเซนเซอร์พร้อมกัน ${count} ตัว ขณะไม่อยู่บ้าน (เปิดประตูห้องสะสม ${doorOpenCount} ครั้ง)`
+    : `ตรวจพบวัตถุผ่านเซนเซอร์พร้อมกัน ${count} ตัว (เปิดประตูห้องสะสม ${doorOpenCount} ครั้ง)`;
 
-      const level = systemMode === 'AWAY' ? 'danger' : 'success';
-      const title = `ตรวจพบการเปิด-ปิดประตูห้อง (ครั้งที่ ${doorOpenCount})`;
-      const details = systemMode === 'AWAY'
-        ? `แจ้งเตือน! ตรวจพบวัตถุผ่านเซนเซอร์ขณะไม่อยู่บ้าน (มีการเปิดประตูห้องแน่นอน ครั้งที่ ${doorOpenCount})`
-        : `ตรวจพบการเปิดประตู/ผ่านเข้าห้อง (รวมเปิดประตูทั้งหมด ${doorOpenCount} ครั้ง)`;
+  recordLog('PASSAGE', title, details, level, sensor_id || 1);
 
-      recordLog('PASSAGE', title, details, level, sensor_id);
-    }
-
-    broadcast({
-      type: 'SENSOR_UPDATE',
-      sensors: sensorState,
-      doorOpenCount,
-      triggeredSensorId: isTriggered ? sensor_id : null
-    });
-  }
+  broadcast({
+    type: 'SENSOR_UPDATE',
+    sensors: sensorState,
+    doorOpenCount
+  });
 
   res.json({ status: 'ok', doorOpenCount });
 });
@@ -145,5 +136,5 @@ wss.on("connection", (ws) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`[WACY Security Access Server] running on http://localhost:${PORT}`);
+  console.log(`[WACY Home Server] running on http://localhost:${PORT}`);
 });

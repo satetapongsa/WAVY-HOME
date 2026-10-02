@@ -1,7 +1,9 @@
 import React from 'react';
-import { DoorOpen, Radio, ShieldAlert, ShieldCheck, CheckCircle2, LogOut, LogIn } from 'lucide-react';
+import { Radio, ShieldAlert, ShieldCheck, CheckCircle2, AlertCircle } from 'lucide-react';
 
 export default function SensorDoorVisualizer({ sensors, systemMode }) {
+  const activeCount = sensors.filter(s => s.active).length;
+
   return (
     <div className="cream-panel p-4 md:p-6 rounded-3xl shadow-sm relative">
       {/* Panel Header */}
@@ -12,10 +14,10 @@ export default function SensorDoorVisualizer({ sensors, systemMode }) {
           </div>
           <div>
             <h2 className="text-sm md:text-base font-bold text-[#292320]">
-              ผังการติดตั้งเซนเซอร์ 5 จุด (Door Sensor Map)
+              ผังสถานะเซนเซอร์ 5 หัว (5-Sensor Real-Time Monitor)
             </h2>
             <p className="text-xs text-stone-500 mt-0.5">
-              แสดงสถานะการตรวจจับ real-time จากเซนเซอร์ทั้ง 5 หัว
+              ระบบนับการเปิด-ปิดประตูเมื่อมีเซนเซอร์จับพร้อมกันตั้งแต่ 3 หัวขึ้นไป
             </p>
           </div>
         </div>
@@ -34,13 +36,17 @@ export default function SensorDoorVisualizer({ sensors, systemMode }) {
 
       {/* Corridor Diagram Container */}
       <div className="p-4 md:p-6 bg-[#faf5f0] rounded-2xl border border-[#ede3da] flex flex-col items-center">
-        {/* Zone Labels */}
-        <div className="w-full flex justify-between text-xs font-bold text-stone-600 mb-3 px-1">
-          <span className="text-rose-800 flex items-center gap-1.5 bg-white/90 px-3 py-1 rounded-xl border border-rose-100 shadow-2xs">
-            <LogOut className="w-3.5 h-3.5 text-rose-500" /> บริเวณนอกห้อง (Outside)
+        {/* Active sensors counter indicator */}
+        <div className="w-full flex justify-between items-center text-xs font-bold text-stone-600 mb-3 px-1">
+          <span className="text-stone-700 flex items-center gap-1.5 bg-white/90 px-3 py-1.5 rounded-xl border border-stone-200 shadow-2xs">
+            <AlertCircle className="w-3.5 h-3.5 text-rose-500" /> เซนเซอร์ที่กำลังจับสัญญาณอยู่: {activeCount} / 5 หัว
           </span>
-          <span className="text-stone-800 flex items-center gap-1.5 bg-white/90 px-3 py-1 rounded-xl border border-stone-200 shadow-2xs">
-            <LogIn className="w-3.5 h-3.5 text-stone-600" /> บริเวณในห้อง (Inside)
+          <span className={`px-3 py-1 rounded-xl text-xs font-bold transition-all border ${
+            activeCount >= 3 
+              ? 'bg-rose-600 text-white border-rose-600 shadow-sm animate-pulse' 
+              : 'bg-stone-100 text-stone-600 border-stone-200'
+          }`}>
+            {activeCount >= 3 ? 'เปิด-ปิดประตู 1 ครั้ง (TRIGGERED)' : 'รอสัญญาณ (READY)'}
           </span>
         </div>
 
@@ -75,7 +81,7 @@ export default function SensorDoorVisualizer({ sensors, systemMode }) {
 
                 <div className="text-center my-1">
                   <h4 className="text-xs font-bold text-[#292320] line-clamp-1">
-                    {s.name.split(' ')[0]}
+                    {s.name}
                   </h4>
                   <span className={`inline-block text-[10px] px-2.5 py-0.5 rounded-full font-mono font-bold mt-1.5 ${
                     isTriggered 
@@ -94,7 +100,7 @@ export default function SensorDoorVisualizer({ sensors, systemMode }) {
         <div className="w-full mt-4 pt-3 border-t border-[#ede3da] flex items-center justify-between text-xs text-stone-500 px-1">
           <span className="flex items-center gap-1.5 font-medium text-stone-600">
             <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-            ตรวจจับสัญญาณเรียลไทม์: S1, S2 (นอก) | S3 (ประตู) | S4, S5 (ใน)
+            เงื่อนไขการบันทึก: จับสัญญาณพร้อมกันตั้งแต่ 3 หรือ 4 หรือ 5 หัว = บันทึกเปิด-ปิดประตู 1 ครั้ง
           </span>
         </div>
       </div>
