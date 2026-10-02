@@ -3,7 +3,7 @@ import SensorDoorVisualizer from './components/SensorDoorVisualizer';
 import LogsTable from './components/LogsTable';
 import SecurityControls from './components/SecurityControls';
 import PassageStats from './components/PassageStats';
-import { Waves, Bell, Wifi, WifiOff, LayoutDashboard, Radio, History, Sliders, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, Bell, Wifi, WifiOff, CheckCircle2 } from 'lucide-react';
 
 export default function App() {
   const [sensors, setSensors] = useState([
@@ -18,7 +18,6 @@ export default function App() {
   const [logs, setLogs] = useState([]);
   const [isConnected, setIsConnected] = useState(false);
   const [bannerAlert, setBannerAlert] = useState(null);
-  const [activeTab, setActiveTab] = useState('DASHBOARD');
   const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString('th-TH'));
 
   const wsRef = useRef(null);
@@ -57,10 +56,7 @@ export default function App() {
 
   // Connect WebSocket with HTTP Polling Fallback for Vercel
   useEffect(() => {
-    // Initial fetch
     fetchStatusAndLogs();
-
-    // Set up polling interval every 1.5s for live Vercel updates
     const pollInterval = setInterval(fetchStatusAndLogs, 1500);
 
     const connectWS = () => {
@@ -100,13 +96,7 @@ export default function App() {
             console.error('WS Parse Error', e);
           }
         };
-
-        ws.onerror = () => {
-          // Silent fallback to HTTP polling
-        };
-      } catch (e) {
-        // Silent fallback to HTTP polling
-      }
+      } catch (e) {}
     };
 
     connectWS();
@@ -144,31 +134,29 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 pb-24 md:pb-8">
-      {/* WAVY Security Access Header Bar */}
+    <div className="min-h-screen bg-slate-50 text-slate-900 pb-8">
+      {/* Header Bar */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md px-4 py-3 shadow-sm border-b border-slate-200">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          {/* WAVY Brand Title */}
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-md shrink-0">
-              <Waves className="w-6 h-6" />
+            <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center shadow-md shrink-0">
+              <ShieldCheck className="w-6 h-6 text-indigo-400" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-base md:text-xl font-extrabold tracking-tight text-slate-900">
-                  WAVY Security Access
+                  WACY Security Access
                 </h1>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-mono font-bold border border-indigo-200">
-                  ESP32 IoT v2.4
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-mono font-bold border border-slate-200">
+                  ESP32 IoT Dashboard
                 </span>
               </div>
               <p className="text-[11px] text-slate-500 font-medium">
-                ระบบเฝ้าระวังประตู 5 เซนเซอร์ระดับองค์กร
+                ระบบเฝ้าระวังประตู 5 เซนเซอร์แบบจุดเดียวเบ็ดเสร็จ
               </p>
             </div>
           </div>
 
-          {/* Real-time System Status & Clock */}
           <div className="flex items-center gap-3">
             <div className="hidden sm:flex flex-col items-end mr-2">
               <span className="text-xs font-mono font-bold text-slate-800">{currentTime}</span>
@@ -187,7 +175,7 @@ export default function App() {
         </div>
       </header>
 
-      {/* Main Container */}
+      {/* Main Single Page Dashboard */}
       <main className="max-w-7xl mx-auto p-4 md:p-6 space-y-4">
         {/* Banner Alert Toast */}
         {bannerAlert && (
@@ -208,146 +196,31 @@ export default function App() {
           </div>
         )}
 
-        {/* Desktop Tab Navigation Bar */}
-        <div className="hidden md:flex items-center gap-1 bg-slate-200/70 p-1.5 rounded-2xl border border-slate-300/60 max-w-fit">
-          <button
-            onClick={() => setActiveTab('DASHBOARD')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition ${
-              activeTab === 'DASHBOARD'
-                ? 'bg-white text-slate-900 shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <LayoutDashboard className="w-4 h-4" />
-            ภาพรวมแดชบอร์ด
-          </button>
+        {/* 1. Key Performance Indicators (Stats Cards) */}
+        <PassageStats 
+          logs={logs} 
+          doorOpenCount={doorOpenCount} 
+          systemMode={systemMode} 
+        />
 
-          <button
-            onClick={() => setActiveTab('SENSORS')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition ${
-              activeTab === 'SENSORS'
-                ? 'bg-white text-slate-900 shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <Radio className="w-4 h-4" />
-            ผังเซนเซอร์ 5 จุด
-          </button>
+        {/* 2. Security Armed Mode Control Panel */}
+        <SecurityControls 
+          systemMode={systemMode}
+          onToggleMode={handleToggleMode}
+        />
 
-          <button
-            onClick={() => setActiveTab('LOGS')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition ${
-              activeTab === 'LOGS'
-                ? 'bg-white text-slate-900 shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <History className="w-4 h-4" />
-            ประวัติความปลอดภัย
-          </button>
+        {/* 3. Live 5-Sensor Head Map Status */}
+        <SensorDoorVisualizer 
+          sensors={sensors}
+          systemMode={systemMode}
+        />
 
-          <button
-            onClick={() => setActiveTab('SETTINGS')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition ${
-              activeTab === 'SETTINGS'
-                ? 'bg-white text-slate-900 shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <Sliders className="w-4 h-4" />
-            โหมดเฝ้าระวัง
-          </button>
-        </div>
-
-        {/* Tab Selection Content */}
-        <div className="space-y-4">
-          {(activeTab === 'DASHBOARD' || activeTab === 'ALL') && (
-            <>
-              <PassageStats logs={logs} doorOpenCount={doorOpenCount} systemMode={systemMode} />
-              <SecurityControls 
-                systemMode={systemMode}
-                onToggleMode={handleToggleMode}
-              />
-              <SensorDoorVisualizer 
-                sensors={sensors}
-                systemMode={systemMode}
-              />
-              <LogsTable logs={logs} onClearLogs={handleClearLogs} />
-            </>
-          )}
-
-          {activeTab === 'SENSORS' && (
-            <SensorDoorVisualizer 
-              sensors={sensors}
-              systemMode={systemMode}
-            />
-          )}
-
-          {activeTab === 'LOGS' && (
-            <LogsTable logs={logs} onClearLogs={handleClearLogs} />
-          )}
-
-          {activeTab === 'SETTINGS' && (
-            <SecurityControls 
-              systemMode={systemMode}
-              onToggleMode={handleToggleMode}
-            />
-          )}
-        </div>
+        {/* 4. Real-time Security Audit Trail Log Table */}
+        <LogsTable 
+          logs={logs} 
+          onClearLogs={handleClearLogs} 
+        />
       </main>
-
-      {/* Mobile Bottom Navigation Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 enterprise-nav-dock px-3 py-2 md:hidden">
-        <div className="grid grid-cols-4 gap-1 max-w-md mx-auto text-center">
-          <button
-            onClick={() => setActiveTab('DASHBOARD')}
-            className={`flex flex-col items-center justify-center py-1.5 rounded-xl transition ${
-              activeTab === 'DASHBOARD'
-                ? 'text-slate-900 bg-slate-100 font-bold'
-                : 'text-slate-500 hover:text-slate-900'
-            }`}
-          >
-            <LayoutDashboard className="w-4 h-4 mb-0.5" />
-            <span className="text-[10px]">แดชบอร์ด</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('SENSORS')}
-            className={`flex flex-col items-center justify-center py-1.5 rounded-xl transition ${
-              activeTab === 'SENSORS'
-                ? 'text-slate-900 bg-slate-100 font-bold'
-                : 'text-slate-500 hover:text-slate-900'
-            }`}
-          >
-            <Radio className="w-4 h-4 mb-0.5" />
-            <span className="text-[10px]">ผังเซนเซอร์</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('LOGS')}
-            className={`flex flex-col items-center justify-center py-1.5 rounded-xl transition ${
-              activeTab === 'LOGS'
-                ? 'text-slate-900 bg-slate-100 font-bold'
-                : 'text-slate-500 hover:text-slate-900'
-            }`}
-          >
-            <History className="w-4 h-4 mb-0.5" />
-            <span className="text-[10px]">ประวัติ</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('SETTINGS')}
-            className={`flex flex-col items-center justify-center py-1.5 rounded-xl transition ${
-              activeTab === 'SETTINGS'
-                ? 'text-slate-900 bg-slate-100 font-bold'
-                : 'text-slate-500 hover:text-slate-900'
-            }`}
-          >
-            <Sliders className="w-4 h-4 mb-0.5" />
-            <span className="text-[10px]">เฝ้าระวัง</span>
-          </button>
-        </div>
-      </nav>
     </div>
   );
 }
